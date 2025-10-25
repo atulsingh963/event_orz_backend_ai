@@ -7,21 +7,28 @@ const Event = require('../models/Event');
 // @access  Private (Event Manager)
 const getTalents = async (req, res) => {
   try {
-    const { skills, minRating } = req.query;
-    let query = { role: 'talent', isActive: true };
+    const { skills, minRating, role } = req.query;
+    let query = { isActive: true };
 
-    if (skills) {
+    // If role is specified, use it, otherwise default to 'talent'
+    if (role) {
+      query.role = role;
+    } else {
+      query.role = 'talent';
+    }
+
+    if (skills && query.role === 'talent') {
       query.skills = { $in: skills.split(',') };
     }
-    if (minRating) {
+    if (minRating && query.role === 'talent') {
       query.averageRating = { $gte: parseFloat(minRating) };
     }
 
-    const talents = await User.find(query)
+    const users = await User.find(query)
       .select('-password')
       .sort('-averageRating');
 
-    res.json(talents);
+    res.json(users);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
