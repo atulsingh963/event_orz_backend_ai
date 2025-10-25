@@ -34,7 +34,19 @@ JWT_EXPIRE=7d
 NODE_ENV=development
 ```
 
-4. Start the server:
+4. Seed the database with sample venues (optional):
+```bash
+npm run seed
+```
+
+This will add 12 sample venues to your database including:
+- The Purple Lounge (New York)
+- Urban Garden Restaurant (Los Angeles)
+- The Blue Rooftop Bar (Miami)
+- Grand Ballroom Hotel Elite (Chicago)
+- And 8 more venues across different cities
+
+5. Start the server:
 ```bash
 # Development mode with auto-restart
 npm run dev
