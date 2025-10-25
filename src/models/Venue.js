@@ -38,6 +38,24 @@ const venueSchema = new mongoose.Schema({
   amenities: [{
     type: String
   }],
+  availableAddOns: [{
+    name: {
+      type: String,
+      required: true
+    },
+    description: {
+      type: String
+    },
+    price: {
+      type: Number,
+      required: true
+    },
+    category: {
+      type: String,
+      enum: ['catering', 'equipment', 'decoration', 'service', 'entertainment', 'other'],
+      default: 'other'
+    }
+  }],
   images: [{
     type: String
   }],

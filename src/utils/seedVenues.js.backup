@@ -156,13 +156,6 @@ const sampleVenues = [
     capacity: 180,
     pricePerDay: 1500,
     amenities: ['Beach Access', 'Ocean View', 'Outdoor Seating', 'Pavilion Cover', 'BBQ Area', 'Parking'],
-    availableAddOns: [
-      { name: 'BBQ Catering Package', description: 'Beach BBQ with grilled seafood and meats', price: 2000, category: 'catering' },
-      { name: 'Beach Bonfire Setup', description: 'Evening bonfire with seating', price: 400, category: 'equipment' },
-      { name: 'Tiki Bar Service', description: 'Tropical drink bar with bartender', price: 700, category: 'catering' },
-      { name: 'Beach Games Package', description: 'Volleyball, cornhole, and more', price: 250, category: 'entertainment' },
-      { name: 'Sunset Photography', description: 'Professional beach photographer', price: 550, category: 'service' }
-    ],
     images: ['https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?w=800'],
     description: 'Beautiful beachside pavilion with stunning ocean views. Perfect for beach weddings, summer parties, and outdoor celebrations.',
     contactPerson: {
@@ -184,13 +177,6 @@ const sampleVenues = [
     capacity: 100,
     pricePerDay: 400,
     amenities: ['Stage', 'Sound System', 'Bar', 'Intimate Seating', 'Piano'],
-    availableAddOns: [
-      { name: 'Live Jazz Trio', description: '3-hour jazz performance', price: 800, category: 'entertainment' },
-      { name: 'Premium Spirits Package', description: 'Top-shelf liquor selection', price: 500, category: 'catering' },
-      { name: 'Craft Beer Selection', description: 'Local craft beers on tap', price: 350, category: 'catering' },
-      { name: 'Appetizer Spread', description: 'New Orleans style appetizers', price: 400, category: 'catering' },
-      { name: 'Sound Engineer', description: 'Professional sound technician', price: 300, category: 'service' }
-    ],
     images: ['https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=800'],
     description: 'Authentic jazz club with intimate atmosphere and excellent acoustics. Ideal for live music performances, jazz nights, and small concerts.',
     contactPerson: {
@@ -212,13 +198,6 @@ const sampleVenues = [
     capacity: 400,
     pricePerDay: 1800,
     amenities: ['Multiple Rooms', 'Projectors', 'WiFi', 'Catering', 'Parking', 'AV Equipment'],
-    availableAddOns: [
-      { name: 'Conference Catering Package', description: 'Breakfast, lunch, and snacks', price: 5000, category: 'catering' },
-      { name: 'Video Recording Service', description: 'Multi-camera recording and editing', price: 1200, category: 'service' },
-      { name: 'Live Streaming Setup', description: 'Professional streaming to online audience', price: 1000, category: 'equipment' },
-      { name: 'Keynote Speaker Coordination', description: 'Speaker management and support', price: 800, category: 'service' },
-      { name: 'Conference Materials Package', description: 'Programs, name tags, folders', price: 600, category: 'other' }
-    ],
     images: ['https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=800'],
     description: 'Professional conference center with mountain views. Perfect for corporate events, seminars, conferences, and team building activities.',
     contactPerson: {
@@ -240,13 +219,6 @@ const sampleVenues = [
     capacity: 80,
     pricePerDay: 550,
     amenities: ['Gallery Space', 'Natural Lighting', 'WiFi', 'Movable Walls', 'Spotlights'],
-    availableAddOns: [
-      { name: 'Gallery Opening Reception', description: 'Wine and cheese reception', price: 600, category: 'catering' },
-      { name: 'Art Installation Support', description: 'Professional art hanging and lighting', price: 450, category: 'service' },
-      { name: 'Gallery Curator Service', description: 'Expert curation and setup', price: 700, category: 'service' },
-      { name: 'Print Material Design', description: 'Exhibition catalogs and signage', price: 400, category: 'other' },
-      { name: 'Opening Night Music', description: 'Live classical music ensemble', price: 500, category: 'entertainment' }
-    ],
     images: ['https://images.unsplash.com/photo-1572021335469-31706a17aaef?w=800'],
     description: 'Sophisticated art gallery loft with natural lighting and flexible space. Great for art shows, product launches, and intimate gatherings.',
     contactPerson: {
@@ -268,14 +240,6 @@ const sampleVenues = [
     capacity: 250,
     pricePerDay: 2000,
     amenities: ['Gardens', 'Indoor/Outdoor Space', 'Fountain', 'Parking', 'Catering Kitchen', 'Bridal Suite'],
-    availableAddOns: [
-      { name: 'Wedding Ceremony Package', description: 'Complete ceremony setup with chairs and arch', price: 1500, category: 'decoration' },
-      { name: 'Gourmet Wedding Catering', description: 'Plated dinner service for 250', price: 15000, category: 'catering' },
-      { name: 'Wedding Coordinator', description: 'Full-day wedding coordination', price: 2000, category: 'service' },
-      { name: 'Floral Design Package', description: 'Bouquets, centerpieces, and arrangements', price: 3000, category: 'decoration' },
-      { name: 'Live String Quartet', description: 'Classical musicians for ceremony and cocktail hour', price: 1200, category: 'entertainment' },
-      { name: 'Wedding Photography & Video', description: 'Full coverage photo and video', price: 2500, category: 'service' }
-    ],
     images: ['https://images.unsplash.com/photo-1519167758481-83f29da8c608?w=800'],
     description: 'Elegant estate with beautiful gardens and stunning architecture. Perfect for weddings, formal events, and upscale celebrations.',
     contactPerson: {
@@ -297,13 +261,6 @@ const sampleVenues = [
     capacity: 200,
     pricePerDay: 900,
     amenities: ['High-Speed WiFi', 'Video Conferencing', 'Projectors', 'Whiteboards', 'Lounge Area', 'Kitchen'],
-    availableAddOns: [
-      { name: 'Startup Pitch Competition Package', description: 'Stage setup with judging tables', price: 800, category: 'equipment' },
-      { name: 'Tech Event Catering', description: 'Gourmet coffee bar and tech-friendly meals', price: 2000, category: 'catering' },
-      { name: 'Hackathon Support Package', description: '24-hour food and beverage service', price: 3000, category: 'catering' },
-      { name: 'Livestream Production', description: 'Multi-camera streaming setup', price: 1500, category: 'equipment' },
-      { name: 'VR/AR Demo Stations', description: 'Tech demo equipment rental', price: 1200, category: 'equipment' }
-    ],
     images: ['https://images.unsplash.com/photo-1497366216548-37526070297c?w=800'],
     description: 'Modern tech-focused event space with cutting-edge technology. Ideal for tech conferences, hackathons, startup events, and workshops.',
     contactPerson: {
@@ -325,14 +282,6 @@ const sampleVenues = [
     capacity: 180,
     pricePerDay: 700,
     amenities: ['Barn Space', 'Outdoor Area', 'String Lights', 'Parking', 'Rustic Decor', 'Fire Pit'],
-    availableAddOns: [
-      { name: 'Country BBQ Catering', description: 'Southern BBQ buffet', price: 2500, category: 'catering' },
-      { name: 'Hay Bale Seating', description: 'Rustic hay bale seating arrangements', price: 300, category: 'decoration' },
-      { name: 'Country Band', description: 'Live country music performance', price: 1000, category: 'entertainment' },
-      { name: 'Mason Jar Lighting', description: 'Hanging mason jar lights', price: 350, category: 'decoration' },
-      { name: 'Petting Zoo', description: 'Small farm animal petting zoo', price: 600, category: 'entertainment' },
-      { name: 'Horseshoe & Lawn Games', description: 'Outdoor game stations', price: 200, category: 'entertainment' }
-    ],
     images: ['https://images.unsplash.com/photo-1519741497674-611481863552?w=800'],
     description: 'Charming rustic barn with countryside views and vintage charm. Perfect for country weddings, barn parties, and rustic celebrations.',
     contactPerson: {
