@@ -111,7 +111,7 @@ const getMyInvitations = async (req, res) => {
   try {
     const invitations = await Invitation.find({
       talent: req.user._id,
-      status: { $in: ['pending', 'accepted'] }
+      status: { $in: ['pending', 'accepted', 'cancelled'] }
     })
       .populate('event', 'title description eventDate startTime endTime')
       .populate('invitedBy', 'name email phone')
@@ -181,12 +181,68 @@ const respondToInvitation = async (req, res) => {
       return res.status(400).json({ message: 'Invitation has expired' });
     }
 
+    // If accepting, check if the skill slot is still available
+    if (status === 'accepted') {
+      const event = await Event.findById(invitation.event);
+      if (!event) {
+        return res.status(404).json({ message: 'Event not found' });
+      }
+
+      // Find the required skill
+      const requiredSkill = event.requiredSkills.find(s => s.skill === invitation.skill);
+      if (!requiredSkill) {
+        return res.status(400).json({ message: 'Skill not required for this event' });
+      }
+
+      // Count accepted invitations for this skill
+      const acceptedCount = await Invitation.countDocuments({
+        event: invitation.event,
+        skill: invitation.skill,
+        status: 'accepted'
+      });
+
+      // Check if skill is already filled
+      if (acceptedCount >= requiredSkill.count) {
+        return res.status(400).json({
+          message: `This ${invitation.skill} position has already been filled. The invitation is no longer available.`
+        });
+      }
+    }
+
     invitation.status = status;
     invitation.respondedAt = new Date();
     await invitation.save();
 
-    // Check if all talents are now confirmed and update event status
+    // If accepted, auto-cancel other pending invitations if skill is now filled
     if (status === 'accepted') {
+      const event = await Event.findById(invitation.event);
+      const requiredSkill = event.requiredSkills.find(s => s.skill === invitation.skill);
+
+      // Count accepted invitations for this skill (including the one just accepted)
+      const acceptedCount = await Invitation.countDocuments({
+        event: invitation.event,
+        skill: invitation.skill,
+        status: 'accepted'
+      });
+
+      // If skill is now filled, cancel all other pending invitations for this skill
+      if (acceptedCount >= requiredSkill.count) {
+        await Invitation.updateMany(
+          {
+            event: invitation.event,
+            skill: invitation.skill,
+            status: 'pending',
+            _id: { $ne: invitation._id } // Exclude the current invitation
+          },
+          {
+            status: 'cancelled',
+            respondedAt: new Date(),
+            cancellationReason: `This ${invitation.skill} position has been filled by another talent.`
+          }
+        );
+      }
+
+      // Check if all talents are now confirmed and update event status
       await checkAndUpdateEventStatus(invitation.event);
     }
 

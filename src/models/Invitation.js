@@ -29,6 +29,10 @@ const invitationSchema = new mongoose.Schema({
     enum: ['pending', 'accepted', 'rejected', 'cancelled', 'replaced'],
     default: 'pending'
   },
+  cancellationReason: {
+    type: String,
+    maxlength: 500
+  },
   expiryDate: {
     type: Date,
     required: true
