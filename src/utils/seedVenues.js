@@ -4,7 +4,7 @@ const Venue = require('../models/Venue');
 
 const sampleVenues = [
   {
-    name: 'The Purple Lounge',
+    name: 'The Purple LoungeXYZ',
     location: {
       address: '123 Downtown Street',
       city: 'New York',
