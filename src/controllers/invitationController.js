@@ -123,6 +123,38 @@ const getMyInvitations = async (req, res) => {
   }
 };
 
+// Helper function to check if all required talents are confirmed
+const checkAndUpdateEventStatus = async (eventId) => {
+  try {
+    const event = await Event.findById(eventId);
+    if (!event) return;
+
+    // Get all invitations for this event
+    const invitations = await Invitation.find({ event: eventId });
+
+    // Check each required skill
+    let allSkillsFilled = true;
+    for (const requiredSkill of event.requiredSkills) {
+      const acceptedForSkill = invitations.filter(
+        inv => inv.skill === requiredSkill.skill && inv.status === 'accepted'
+      ).length;
+
+      if (acceptedForSkill < requiredSkill.count) {
+        allSkillsFilled = false;
+        break;
+      }
+    }
+
+    // Update event status if all skills are filled
+    if (allSkillsFilled && event.status === 'recruiting') {
+      event.status = 'confirmed';
+      await event.save();
+    }
+  } catch (error) {
+    console.error('Error checking event status:', error);
+  }
+};
+
 // @desc    Respond to invitation (Accept/Reject)
 // @route   PUT /api/invitations/:id/respond
 // @access  Private (Talent)
@@ -152,6 +184,11 @@ const respondToInvitation = async (req, res) => {
     invitation.status = status;
     invitation.respondedAt = new Date();
     await invitation.save();
+
+    // Check if all talents are now confirmed and update event status
+    if (status === 'accepted') {
+      await checkAndUpdateEventStatus(invitation.event);
+    }
 
     res.json(invitation);
   } catch (error) {
