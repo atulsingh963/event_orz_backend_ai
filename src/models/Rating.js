@@ -6,14 +6,24 @@ const ratingSchema = new mongoose.Schema({
     ref: 'Event',
     required: true
   },
-  talent: {
+  ratedUser: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true
   },
+  // Legacy field for backward compatibility
+  talent: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
   ratedBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
+    required: true
+  },
+  userType: {
+    type: String,
+    enum: ['talent', 'eventManager'],
     required: true
   },
   rating: {
@@ -52,25 +62,25 @@ const ratingSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Ensure one rating per talent per event per rater
-ratingSchema.index({ event: 1, talent: 1, ratedBy: 1 }, { unique: true });
+// Ensure one rating per user per event per rater
+ratingSchema.index({ event: 1, ratedUser: 1, ratedBy: 1 }, { unique: true });
 
-// Update talent's average rating after saving
+// Update user's average rating after saving
 ratingSchema.post('save', async function() {
   const User = mongoose.model('User');
   const Rating = mongoose.model('Rating');
 
   const stats = await Rating.aggregate([
-    { $match: { talent: this.talent } },
+    { $match: { ratedUser: this.ratedUser } },
     { $group: {
-      _id: '$talent',
+      _id: '$ratedUser',
       averageRating: { $avg: '$rating' },
       totalRatings: { $sum: 1 }
     }}
   ]);
 
   if (stats.length > 0) {
-    await User.findByIdAndUpdate(this.talent, {
+    await User.findByIdAndUpdate(this.ratedUser, {
       averageRating: stats[0].averageRating,
       totalRatings: stats[0].totalRatings
     });
