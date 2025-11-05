@@ -2,6 +2,9 @@ const Invitation = require('../models/Invitation');
 const User = require('../models/User');
 const Event = require('../models/Event');
 
+// Utility: escape regex special chars for safe dynamic RegExp
+const escapeRegExp = (s) => (typeof s === 'string' ? s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') : '');
+
 // @desc    Get all talents (for Event Manager to browse)
 // @route   GET /api/talents
 // @access  Private (Event Manager)
@@ -18,7 +21,10 @@ const getTalents = async (req, res) => {
     }
 
     if (skills && query.role === 'talent') {
-      query.skills = { $in: skills.split(',') };
+      const escapeRegExp = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const skillTokens = skills.split(',').map(s => s.trim()).filter(Boolean);
+      // Case-insensitive match for any of the provided skills
+      query.skills = { $in: skillTokens.map(s => new RegExp(`^${escapeRegExp(s)}$`, 'i')) };
     }
     if (minRating && query.role === 'talent') {
       query.averageRating = { $gte: parseFloat(minRating) };
@@ -41,6 +47,9 @@ const sendInvitation = async (req, res) => {
   try {
     const { eventId, talentId, skill, message, expiryDate, compensation } = req.body;
 
+    // Normalize skill for consistent matching
+    const normalizedSkill = typeof skill === 'string' ? skill.trim().toLowerCase() : skill;
+
     // Verify event and that user is the manager
     const event = await Event.findById(eventId);
     if (!event) {
@@ -57,11 +66,13 @@ const sendInvitation = async (req, res) => {
       return res.status(400).json({ message: 'Invalid talent' });
     }
 
-    // Check if invitation already exists
+    // Check if invitation already exists (case-insensitive by using regex on skill)
+    const escapeRegExp = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const existingInvitation = await Invitation.findOne({
       event: eventId,
       talent: talentId,
-      status: { $in: ['pending', 'accepted'] }
+      status: { $in: ['pending', 'accepted'] },
+      skill: { $regex: new RegExp(`^${escapeRegExp(normalizedSkill || '')}$`, 'i') }
     });
 
     if (existingInvitation) {
@@ -72,7 +83,7 @@ const sendInvitation = async (req, res) => {
       event: eventId,
       talent: talentId,
       invitedBy: req.user._id,
-      skill,
+      skill: normalizedSkill,
       message,
       expiryDate,
       compensation
@@ -113,7 +124,11 @@ const getMyInvitations = async (req, res) => {
       talent: req.user._id,
       status: { $in: ['pending', 'accepted', 'cancelled'] }
     })
-      .populate('event', 'title description eventDate startTime endTime')
+      .populate({
+        path: 'event',
+        select: 'title description eventDate startTime endTime attendees venue',
+        populate: { path: 'venue', select: 'name location' }
+      })
       .populate('invitedBy', 'name email phone')
       .sort('-createdAt');
 
@@ -136,7 +151,7 @@ const checkAndUpdateEventStatus = async (eventId) => {
     let allSkillsFilled = true;
     for (const requiredSkill of event.requiredSkills) {
       const acceptedForSkill = invitations.filter(
-        inv => inv.skill === requiredSkill.skill && inv.status === 'accepted'
+        inv => (inv.skill || '').toLowerCase() === (requiredSkill.skill || '').toLowerCase() && inv.status === 'accepted'
       ).length;
 
       if (acceptedForSkill < requiredSkill.count) {
@@ -189,15 +204,17 @@ const respondToInvitation = async (req, res) => {
       }
 
       // Find the required skill
-      const requiredSkill = event.requiredSkills.find(s => s.skill === invitation.skill);
+      const requiredSkill = event.requiredSkills.find(s => (s.skill || '').toLowerCase() === (invitation.skill || '').toLowerCase());
       if (!requiredSkill) {
         return res.status(400).json({ message: 'Skill not required for this event' });
       }
 
       // Count accepted invitations for this skill
+      // Count accepted invitations for this skill (case-insensitive)
+      const escapeRegExp = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       const acceptedCount = await Invitation.countDocuments({
         event: invitation.event,
-        skill: invitation.skill,
+        skill: { $regex: new RegExp(`^${escapeRegExp(invitation.skill || '')}$`, 'i') },
         status: 'accepted'
       });
 
@@ -216,21 +233,21 @@ const respondToInvitation = async (req, res) => {
     // If accepted, auto-cancel other pending invitations if skill is now filled
     if (status === 'accepted') {
       const event = await Event.findById(invitation.event);
-      const requiredSkill = event.requiredSkills.find(s => s.skill === invitation.skill);
+      const requiredSkill = event.requiredSkills.find(s => (s.skill || '').toLowerCase() === (invitation.skill || '').toLowerCase());
 
-      // Count accepted invitations for this skill (including the one just accepted)
+      // Count accepted invitations for this skill (including the one just accepted, case-insensitive)
       const acceptedCount = await Invitation.countDocuments({
         event: invitation.event,
-        skill: invitation.skill,
+        skill: { $regex: new RegExp(`^${escapeRegExp(invitation.skill || '')}$`, 'i') },
         status: 'accepted'
       });
 
-      // If skill is now filled, cancel all other pending invitations for this skill
-      if (acceptedCount >= requiredSkill.count) {
+      // If the required skill is known and now filled, cancel other pending invitations for this skill
+      if (requiredSkill && acceptedCount >= requiredSkill.count) {
         await Invitation.updateMany(
           {
             event: invitation.event,
-            skill: invitation.skill,
+            skill: { $regex: new RegExp(`^${escapeRegExp(invitation.skill || '')}$`, 'i') },
             status: 'pending',
             _id: { $ne: invitation._id } // Exclude the current invitation
           },

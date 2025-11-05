@@ -90,8 +90,17 @@ const eventSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Calculate total price before saving
+// Normalize requiredSkills (case-insensitive matching) and calculate total price before saving
 eventSchema.pre('save', function(next) {
+  // Normalize requiredSkills.skill to lowercase for consistent matching
+  if (Array.isArray(this.requiredSkills)) {
+    this.requiredSkills = this.requiredSkills.map(rs => ({
+      ...rs,
+      skill: typeof rs.skill === 'string' ? rs.skill.trim().toLowerCase() : rs.skill
+    }));
+  }
+
+  // Recompute budget totals when relevant fields change
   if (this.isModified('addOns') || this.isModified('budget.venuePrice')) {
     const addOnsTotal = this.addOns.reduce((total, addon) => {
       return total + (addon.price * addon.quantity);

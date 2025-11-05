@@ -59,4 +59,12 @@ const invitationSchema = new mongoose.Schema({
 invitationSchema.index({ event: 1, talent: 1 });
 invitationSchema.index({ talent: 1, status: 1 });
 
+// Normalize skill to lowercase for consistent matching
+invitationSchema.pre('save', function(next) {
+  if (typeof this.skill === 'string') {
+    this.skill = this.skill.trim().toLowerCase();
+  }
+  next();
+});
+
 module.exports = mongoose.model('Invitation', invitationSchema);
