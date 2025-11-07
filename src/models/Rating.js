@@ -23,7 +23,7 @@ const ratingSchema = new mongoose.Schema({
   },
   userType: {
     type: String,
-    enum: ['talent'],
+    enum: ['talent', 'organizer'],
     required: true
   },
   rating: {

@@ -2,9 +2,9 @@ const Rating = require('../models/Rating');
 const Event = require('../models/Event');
 const Invitation = require('../models/Invitation');
 
-// @desc    Create rating for talent
+// @desc    Create rating (organizer → talent, or talent → organizer)
 // @route   POST /api/ratings
-// @access  Private (Event Organizer)
+// @access  Private (Event Organizer or Talent)
 const createRating = async (req, res) => {
   try {
     const { eventId, userId, userType, rating, review, categories } = req.body;
@@ -19,20 +19,35 @@ const createRating = async (req, res) => {
       return res.status(400).json({ message: 'Can only rate after event completion' });
     }
 
-    // Authorization - only organizer can rate
-    if (event.organizer.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: 'Not authorized to rate talents for this event' });
-    }
+    if (userType === 'talent') {
+      // Organizer rates a participating talent
+      if (event.organizer.toString() !== req.user._id.toString()) {
+        return res.status(403).json({ message: 'Only organizer can rate talents for this event' });
+      }
 
-    // Verify talent was invited and accepted
-    const invitation = await Invitation.findOne({
-      event: eventId,
-      talent: userId,
-      status: 'accepted'
-    });
-
-    if (!invitation) {
-      return res.status(400).json({ message: 'Talent did not participate in this event' });
+      const invitation = await Invitation.findOne({
+        event: eventId,
+        talent: userId,
+        status: 'accepted'
+      });
+      if (!invitation) {
+        return res.status(400).json({ message: 'Talent did not participate in this event' });
+      }
+    } else if (userType === 'organizer') {
+      // Talent rates the organizer, only if talent participated
+      if (event.organizer.toString() !== userId) {
+        return res.status(400).json({ message: 'Rated user must be the event organizer' });
+      }
+      const invitation = await Invitation.findOne({
+        event: eventId,
+        talent: req.user._id,
+        status: 'accepted'
+      });
+      if (!invitation) {
+        return res.status(403).json({ message: 'Only participating talents can rate the organizer' });
+      }
+    } else {
+      return res.status(400).json({ message: 'Invalid userType' });
     }
 
     // Check if rating already exists
