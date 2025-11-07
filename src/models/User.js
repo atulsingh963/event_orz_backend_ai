@@ -35,8 +35,21 @@ const userSchema = new mongoose.Schema({
   },
   // Talent specific fields
   skills: [{
-    type: String,
-    trim: true
+    skill: {
+      type: String,
+      required: true,
+      trim: true,
+      lowercase: true
+    },
+    price: {
+      type: Number,
+      required: true,
+      min: 0
+    },
+    currency: {
+      type: String,
+      default: 'INR'
+    }
   }],
   bio: {
     type: String,
