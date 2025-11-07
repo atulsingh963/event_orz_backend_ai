@@ -5,27 +5,23 @@ const Event = require('../models/Event');
 // Utility: escape regex special chars for safe dynamic RegExp
 const escapeRegExp = (s) => (typeof s === 'string' ? s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') : '');
 
-// @desc    Get all talents (for Event Manager to browse)
-// @route   GET /api/talents
-// @access  Private (Event Manager)
+// @desc    Get talents (for organizer to browse)
+// @route   GET /api/invitations/talents
+// @access  Private (Event Organizer)
 const getTalents = async (req, res) => {
   try {
     const { skills, minRating, role } = req.query;
-    let query = { isActive: true };
+    const query = { isActive: true, role: role || 'talent' };
 
-    // If role is specified, use it, otherwise default to 'talent'
-    if (role) {
-      query.role = role;
-    } else {
-      query.role = 'talent';
-    }
-
+    // Support both array and single skill; ensure case-insensitive match on nested skills.skill
     if (skills && query.role === 'talent') {
-      const escapeRegExp = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const skillTokens = skills.split(',').map(s => s.trim()).filter(Boolean);
-      // Case-insensitive match for any of the provided skills
-      query.skills = { $in: skillTokens.map(s => new RegExp(`^${escapeRegExp(s)}$`, 'i')) };
+      const normalize = (v) => (Array.isArray(v) ? v : String(v).split(',')).map(s => s.trim()).filter(Boolean);
+      const skillTokens = normalize(skills);
+      const regexes = skillTokens.map(s => new RegExp(`^${escapeRegExp(s)}$`, 'i'));
+      // Match any of the provided skills inside subdocument array
+      query['skills.skill'] = { $in: regexes };
     }
+
     if (minRating && query.role === 'talent') {
       query.averageRating = { $gte: parseFloat(minRating) };
     }

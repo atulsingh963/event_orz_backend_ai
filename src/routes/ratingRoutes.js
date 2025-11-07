@@ -9,7 +9,7 @@ const {
 } = require('../controllers/ratingController');
 const { protect, authorize } = require('../middleware/auth');
 
-router.post('/', protect, authorize('eventOrganizer', 'eventManager'), createRating);
+router.post('/', protect, authorize('eventOrganizer'), createRating);
 router.get('/user/:userId', getUserRatings);
 router.get('/talent/:talentId', getTalentRatings);
 router.get('/event/:eventId', protect, getEventRatings);

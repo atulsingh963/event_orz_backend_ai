@@ -2,9 +2,9 @@ const Rating = require('../models/Rating');
 const Event = require('../models/Event');
 const Invitation = require('../models/Invitation');
 
-// @desc    Create rating for talent or event manager
+// @desc    Create rating for talent
 // @route   POST /api/ratings
-// @access  Private (Event Organizer/Manager)
+// @access  Private (Event Organizer)
 const createRating = async (req, res) => {
   try {
     const { eventId, userId, userType, rating, review, categories } = req.body;
@@ -19,37 +19,20 @@ const createRating = async (req, res) => {
       return res.status(400).json({ message: 'Can only rate after event completion' });
     }
 
-    // Authorization based on user type
-    if (userType === 'talent') {
-      // Verify user is organizer or manager of the event
-      const isAuthorized =
-        event.organizer.toString() === req.user._id.toString() ||
-        (event.eventManager && event.eventManager.toString() === req.user._id.toString());
+    // Authorization - only organizer can rate
+    if (event.organizer.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Not authorized to rate talents for this event' });
+    }
 
-      if (!isAuthorized) {
-        return res.status(403).json({ message: 'Not authorized to rate talents for this event' });
-      }
+    // Verify talent was invited and accepted
+    const invitation = await Invitation.findOne({
+      event: eventId,
+      talent: userId,
+      status: 'accepted'
+    });
 
-      // Verify talent was invited and accepted
-      const invitation = await Invitation.findOne({
-        event: eventId,
-        talent: userId,
-        status: 'accepted'
-      });
-
-      if (!invitation) {
-        return res.status(400).json({ message: 'Talent did not participate in this event' });
-      }
-    } else if (userType === 'eventManager') {
-      // Only organizer can rate event manager
-      if (event.organizer.toString() !== req.user._id.toString()) {
-        return res.status(403).json({ message: 'Only event organizer can rate event manager' });
-      }
-
-      // Verify this was the event manager
-      if (!event.eventManager || event.eventManager.toString() !== userId) {
-        return res.status(400).json({ message: 'This user was not the event manager' });
-      }
+    if (!invitation) {
+      return res.status(400).json({ message: 'Talent did not participate in this event' });
     }
 
     // Check if rating already exists
@@ -85,7 +68,7 @@ const createRating = async (req, res) => {
   }
 };
 
-// @desc    Get ratings for a user (talent or event manager)
+// @desc    Get ratings for a user (talent)
 // @route   GET /api/ratings/user/:userId
 // @access  Public
 const getUserRatings = async (req, res) => {
