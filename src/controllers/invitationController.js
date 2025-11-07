@@ -42,7 +42,7 @@ const getTalents = async (req, res) => {
 
 // @desc    Send invitation to talent
 // @route   POST /api/invitations
-// @access  Private (Event Manager)
+// @access  Private (Event Organizer)
 const sendInvitation = async (req, res) => {
   try {
     const { eventId, talentId, skill, message, expiryDate, compensation } = req.body;
@@ -50,13 +50,13 @@ const sendInvitation = async (req, res) => {
     // Normalize skill for consistent matching
     const normalizedSkill = typeof skill === 'string' ? skill.trim().toLowerCase() : skill;
 
-    // Verify event and that user is the manager
+    // Verify event and that user is the organizer
     const event = await Event.findById(eventId);
     if (!event) {
       return res.status(404).json({ message: 'Event not found' });
     }
 
-    if (event.eventManager.toString() !== req.user._id.toString()) {
+    if (event.organizer.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: 'Not authorized to send invitations for this event' });
     }
 
@@ -271,7 +271,7 @@ const respondToInvitation = async (req, res) => {
 
 // @desc    Remove/Replace talent from event
 // @route   PUT /api/invitations/:id/remove
-// @access  Private (Event Manager)
+// @access  Private (Event Organizer)
 const removeOrReplaceTalent = async (req, res) => {
   try {
     const { replacementTalentId } = req.body;

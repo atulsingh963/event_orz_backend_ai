@@ -10,11 +10,11 @@ const {
 } = require('../controllers/invitationController');
 const { protect, authorize } = require('../middleware/auth');
 
-router.get('/talents', protect, authorize('eventManager', 'eventOrganizer'), getTalents);
-router.post('/', protect, authorize('eventManager'), sendInvitation);
+router.get('/talents', protect, authorize('eventOrganizer'), getTalents);
+router.post('/', protect, authorize('eventOrganizer'), sendInvitation);
 router.get('/event/:eventId', protect, getEventInvitations);
 router.get('/my-invitations', protect, authorize('talent'), getMyInvitations);
 router.put('/:id/respond', protect, authorize('talent'), respondToInvitation);
-router.put('/:id/remove', protect, authorize('eventManager'), removeOrReplaceTalent);
+router.put('/:id/remove', protect, authorize('eventOrganizer'), removeOrReplaceTalent);
 
 module.exports = router;

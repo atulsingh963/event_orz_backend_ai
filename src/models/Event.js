@@ -16,10 +16,6 @@ const eventSchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
-  eventManager: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  },
   venue: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Venue',

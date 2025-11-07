@@ -57,17 +57,10 @@ const createEvent = async (req, res) => {
 // @access  Private
 const getEvents = async (req, res) => {
   try {
-    let query = {};
-
-    if (req.user.role === 'eventOrganizer') {
-      query.organizer = req.user._id;
-    } else if (req.user.role === 'eventManager') {
-      query.eventManager = req.user._id;
-    }
+    const query = { organizer: req.user._id };
 
     const events = await Event.find(query)
       .populate('organizer', 'name email')
-      .populate('eventManager', 'name email')
       .populate('venue', 'name location')
       .sort('-createdAt');
 
@@ -84,7 +77,6 @@ const getEventById = async (req, res) => {
   try {
     const event = await Event.findById(req.params.id)
       .populate('organizer', 'name email phone')
-      .populate('eventManager', 'name email phone')
       .populate('venue');
 
     if (!event) {
@@ -147,36 +139,6 @@ const deleteEvent = async (req, res) => {
   }
 };
 
-// @desc    Invite event manager to event
-// @route   POST /api/events/:id/invite-manager
-// @access  Private (Event Organizer)
-const inviteEventManager = async (req, res) => {
-  try {
-    const { managerId } = req.body;
-    const event = await Event.findById(req.params.id);
-
-    if (!event) {
-      return res.status(404).json({ message: 'Event not found' });
-    }
-
-    if (event.organizer.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: 'Not authorized' });
-    }
-
-    const manager = await User.findById(managerId);
-    if (!manager || manager.role !== 'eventManager') {
-      return res.status(400).json({ message: 'Invalid event manager' });
-    }
-
-    event.eventManager = managerId;
-    event.status = 'recruiting';
-    await event.save();
-
-    res.json(event);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
 
 // @desc    Add add-ons to event
 // @route   POST /api/events/:id/addons
@@ -203,9 +165,9 @@ const addEventAddOns = async (req, res) => {
   }
 };
 
-// @desc    Update event status (for event manager)
+// @desc    Update event status (for organizer)
 // @route   PUT /api/events/:id/status
-// @access  Private (Event Manager)
+// @access  Private (Event Organizer)
 const updateEventStatus = async (req, res) => {
   try {
     const { status } = req.body;
@@ -215,15 +177,20 @@ const updateEventStatus = async (req, res) => {
       return res.status(404).json({ message: 'Event not found' });
     }
 
-    // Check if user is the event manager
-    if (!event.eventManager || event.eventManager.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: 'Not authorized. Only the event manager can update event status.' });
+    // Check if user is the organizer
+    if (event.organizer.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Not authorized. Only the event organizer can update event status.' });
     }
 
     // Validate status transitions
     const validTransitions = {
-      'confirmed': ['ongoing'],
-      'ongoing': ['completed']
+      'draft': ['planning', 'cancelled'],
+      'planning': ['recruiting', 'cancelled'],
+      'recruiting': ['confirmed', 'cancelled'],
+      'confirmed': ['ongoing', 'cancelled'],
+      'ongoing': ['completed', 'cancelled'],
+      'completed': [],
+      'cancelled': []
     };
 
     if (!validTransitions[event.status] || !validTransitions[event.status].includes(status)) {
@@ -237,7 +204,6 @@ const updateEventStatus = async (req, res) => {
 
     const updatedEvent = await Event.findById(event._id)
       .populate('organizer', 'name email phone')
-      .populate('eventManager', 'name email phone')
       .populate('venue');
 
     res.json(updatedEvent);
@@ -252,7 +218,6 @@ module.exports = {
   getEventById,
   updateEvent,
   deleteEvent,
-  inviteEventManager,
   addEventAddOns,
   updateEventStatus
 };

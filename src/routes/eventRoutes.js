@@ -6,7 +6,6 @@ const {
   getEventById,
   updateEvent,
   deleteEvent,
-  inviteEventManager,
   addEventAddOns,
   updateEventStatus
 } = require('../controllers/eventController');
@@ -21,8 +20,7 @@ router.route('/:id')
   .put(protect, authorize('eventOrganizer'), updateEvent)
   .delete(protect, authorize('eventOrganizer'), deleteEvent);
 
-router.post('/:id/invite-manager', protect, authorize('eventOrganizer'), inviteEventManager);
 router.post('/:id/addons', protect, authorize('eventOrganizer'), addEventAddOns);
-router.put('/:id/status', protect, authorize('eventManager'), updateEventStatus);
+router.put('/:id/status', protect, authorize('eventOrganizer'), updateEventStatus);
 
 module.exports = router;
