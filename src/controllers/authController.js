@@ -6,7 +6,7 @@ const generateToken = require('../utils/generateToken');
 // @access  Public
 const register = async (req, res) => {
   try {
-    const { name, email, password, role, phone, skills, bio } = req.body;
+  const { name, email, password, role, phone } = req.body;
 
     // Check if user exists
     const userExists = await User.findOne({ email });
@@ -23,11 +23,7 @@ const register = async (req, res) => {
       phone
     };
 
-    // Add talent-specific fields
-    if (role === 'talent' && skills) {
-      userData.skills = skills;
-      userData.bio = bio;
-    }
+    // Talent-specific fields are added via profile update after registration
 
     const user = await User.create(userData);
 
@@ -98,10 +94,48 @@ const updateProfile = async (req, res) => {
       user.phone = req.body.phone || user.phone;
       user.profileImage = req.body.profileImage || user.profileImage;
 
+      // Helper to normalize incoming skills into the embedded schema shape
+      const normalizeSkills = (skills) => {
+        const toSkillObj = (item) => {
+          if (typeof item === 'string') {
+            const skill = item.trim();
+            if (!skill) throw new Error('Skill name cannot be empty');
+            return { skill, price: 0, currency: 'INR' };
+          }
+          if (item && typeof item === 'object') {
+            const skill = (item.skill || item.name || '').toString().trim();
+            const priceNum = Number(item.price ?? 0);
+            const currency = (item.currency ?? 'INR').toString();
+            if (!skill) throw new Error('Skill name is required');
+            if (!Number.isFinite(priceNum) || priceNum < 0) throw new Error('Skill price must be a non-negative number');
+            return { skill, price: priceNum, currency };
+          }
+          throw new Error('Invalid skill entry');
+        };
+
+        if (typeof skills === 'string') {
+          return [toSkillObj(skills)];
+        }
+        if (Array.isArray(skills)) {
+          return skills.map(toSkillObj);
+        }
+        throw new Error('Skills must be a string, an array of strings, or an array of objects');
+      };
+
       if (user.role === 'talent') {
-        user.skills = req.body.skills || user.skills;
-        user.bio = req.body.bio || user.bio;
-        user.portfolio = req.body.portfolio || user.portfolio;
+        if (typeof req.body.skills !== 'undefined') {
+          try {
+            user.skills = normalizeSkills(req.body.skills);
+          } catch (e) {
+            return res.status(400).json({ message: e.message });
+          }
+        }
+        if (typeof req.body.bio !== 'undefined') {
+          user.bio = req.body.bio;
+        }
+        if (typeof req.body.portfolio !== 'undefined') {
+          user.portfolio = req.body.portfolio;
+        }
       }
 
       const updatedUser = await user.save();

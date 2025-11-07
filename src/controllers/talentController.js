@@ -1,6 +1,40 @@
 const User = require('../models/User');
 const Rating = require('../models/Rating');
 
+// Utility: escape regex special chars for safe dynamic RegExp
+const escapeRegExp = (s) => (typeof s === 'string' ? s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') : '');
+
+// @desc    Public list/search talents
+// @route   GET /api/talents
+// @access  Public
+const listTalents = async (req, res) => {
+  try {
+    const { skill, skills, minRating } = req.query;
+    const query = { isActive: true, role: 'talent' };
+
+    // Accept skill (string) or skills (comma-separated or array)
+    const raw = skills ?? skill;
+    if (raw) {
+      const normalize = (v) => (Array.isArray(v) ? v : String(v).split(',')).map(s => s.trim()).filter(Boolean);
+      const tokens = normalize(raw);
+      const regexes = tokens.map(s => new RegExp(`^${escapeRegExp(s)}$`, 'i'));
+      query['skills.skill'] = { $in: regexes };
+    }
+
+    if (minRating) {
+      query.averageRating = { $gte: parseFloat(minRating) };
+    }
+
+    const users = await User.find(query)
+      .select('-password')
+      .sort('-averageRating');
+
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 // @desc    Get talent profile
 // @route   GET /api/talents/:id
 // @access  Public
@@ -55,6 +89,7 @@ const updateTalentProfile = async (req, res) => {
 };
 
 module.exports = {
+  listTalents,
   getTalentProfile,
   updateTalentProfile
 };

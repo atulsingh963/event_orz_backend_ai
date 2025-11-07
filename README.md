@@ -69,7 +69,6 @@ npm start
 - `GET /api/events/:id` - Get single event
 - `PUT /api/events/:id` - Update event (Organizer)
 - `DELETE /api/events/:id` - Delete event (Organizer)
-- `POST /api/events/:id/invite-manager` - Invite event manager (Organizer)
 - `POST /api/events/:id/addons` - Add event add-ons (Organizer)
 
 ### Venues
@@ -103,13 +102,14 @@ npm start
 - Invite event managers
 - Purchase add-ons
 - Rate talents after events
+- Can perform all Event Manager actions:
+  - View assigned events
+  - Browse and invite talents
+  - Manage talent invitations (send, remove/replace)
+  - Rate talents after events
 
-### Event Manager
-- View assigned events
-- Browse and invite talents
-- Manage talent invitations
-- Remove/replace talents
-- Rate talents after events
+### Event Manager (merged)
+All Event Manager capabilities have been merged into the Event Organizer role and are available to Event Organizers.
 
 ### Talent
 - Set up skill-based profile
