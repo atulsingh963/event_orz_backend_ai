@@ -31,7 +31,11 @@ app.use('/api/invitations', invitationRoutes);
 app.use('/api/talents', talentRoutes);
 app.use('/api/ratings', ratingRoutes);
 
-// Health check
+// Health check and Root route
+app.get('/', (req, res) => {
+  res.send('<h1>EventOrz API is Running! 🚀</h1><p>This is the backend API. Please visit <a href="http://localhost:3000">http://localhost:3000</a> to view the Frontend UI.</p>');
+});
+
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'Event Organizer API is running' });
 });
